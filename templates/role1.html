@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pioneer — University Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #05050a;
+    --surface: #0f0f18;
+    --accent-gold: #c8a96e;
+    --accent-teal: #4ecdc4;
+    --text: #f0eee8;
+    --muted: #7a7888;
+    --border: rgba(200,169,110,0.2);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Epilogue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(200,169,110,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 50%, rgba(78,205,196,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Grid lines */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(200,169,110,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,169,110,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeIn 1s ease both;
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: slideDown 0.8s 0.2s ease both;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: slideDown 0.8s 0.35s ease both;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent-gold);
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 380px;
+    margin: 0 auto 3.5rem;
+    line-height: 1.7;
+    opacity: 0;
+    animation: slideDown 0.8s 0.5s ease both;
+  }
+
+  .role-cards {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: slideUp 0.8s 0.65s ease both;
+  }
+
+  .role-card {
+    width: 220px;
+    padding: 2.5rem 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .role-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(200,169,110,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .role-card:hover::before { opacity: 1; }
+  .role-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-gold);
+  }
+
+  .role-card.teal:hover {
+    border-color: var(--accent-teal);
+  }
+
+  .role-card.teal::before {
+    background: linear-gradient(135deg, rgba(78,205,196,0.08), transparent);
+  }
+
+  .role-icon {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+
+  .role-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .role-card.teal .role-label { color: var(--accent-teal); }
+
+  .role-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+  }
+
+  .role-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .role-arrow {
+    position: absolute;
+    bottom: 1.2rem; right: 1.5rem;
+    font-size: 1rem;
+    color: var(--accent-gold);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .role-card.teal .role-arrow { color: var(--accent-teal); }
+  .role-card:hover .role-arrow { opacity: 1; transform: translateX(0); }
+
+  .divider {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+    align-self: center;
+    flex-shrink: 0;
+    display: none;
+  }
+
+  @media (min-width: 520px) {
+    .divider { display: block; }
+  }
+
+  .footer-note {
+    position: fixed;
+    bottom: 2rem; left: 50%; transform: translateX(-50%);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeIn 1s 1.2s ease both;
+  }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <p class="eyebrow">University Support System</p>
+  <h1>Pion<em>eer</em></h1>
+  <p class="subtitle">A unified helpdesk for students and staff. Select your role to continue.</p>
+
+  <div class="role-cards">
+    <a href="/student" class="role-card">
+      <span class="role-icon">🎓</span>
+      <div class="role-label">Portal</div>
+      <div class="role-title">Student</div>
+      <div class="role-desc">Submit queries, track status, manage your requests.</div>
+      <span class="role-arrow">→</span>
+    </a>
+
+    <div class="divider"></div>
+
+    <a href="/admin-login-page" class="role-card teal">
+      <span class="role-icon">🛡️</span>
+      <div class="role-label">Dashboard</div>
+      <div class="role-title">Admin</div>
+      <div class="role-desc">Manage tickets, view analytics, resolve issues.</div>
+      <span class="role-arrow">→</span>
+    </a>
+  </div>
+</div>
+
+<p class="footer-note">PIONEER · UNIVERSITY SUPPORT PLATFORM</p>
+
+</body>
+</html>

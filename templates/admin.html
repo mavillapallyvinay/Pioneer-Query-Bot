@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pioneer — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Epilogue:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #05050a;
+    --surface: #0f0f18;
+    --card: #141420;
+    --border: rgba(78,205,196,0.15);
+    --border-soft: rgba(255,255,255,0.06);
+    --accent: #4ecdc4;
+    --gold: #c8a96e;
+    --text: #f0eee8;
+    --muted: #7a7888;
+    --high: #ef476f;
+    --medium: #f7b731;
+    --low: #6bcb77;
+    --pending: #f7b731;
+    --progress: #4ecdc4;
+    --resolved: #6bcb77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Epilogue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 40% 50% at 90% 20%, rgba(78,205,196,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    padding: 0;
+  }
+
+  .sidebar-logo {
+    padding: 1.8rem 1.5rem 1.5rem;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-text em { font-style: italic; color: var(--accent); }
+
+  .logo-badge {
+    display: inline-block;
+    background: rgba(78,205,196,0.1);
+    border: 1px solid rgba(78,205,196,0.2);
+    color: var(--accent);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    margin-top: 0.3rem;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 1.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    background: none;
+    text-align: left;
+    width: 100%;
+    font-family: 'Epilogue', sans-serif;
+  }
+
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .nav-item.active { color: var(--accent); background: rgba(78,205,196,0.08); border-color: rgba(78,205,196,0.15); }
+
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 1.2rem 1.5rem;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  .btn-logout {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    padding: 0.6rem;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { color: var(--high); border-color: var(--high); }
+
+  /* ─── MAIN ─── */
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border-soft);
+    background: rgba(5,5,10,0.8);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .topbar-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+  .btn-sm {
+    padding: 0.45rem 0.9rem;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-accent { background: var(--accent); color: #05050a; }
+  .btn-accent:hover { opacity: 0.88; }
+
+  .content { padding: 2rem; }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn 0.3s ease; }
+
+  /* ─── STAT CARDS ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 1px;
+  }
+
+  .stat-card.gold::before { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .stat-card.teal::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+  .stat-card.warn::before { background: linear-gradient(90deg, transparent, var(--medium), transparent); }
+  .stat-card.prog::before { background: linear-gradient(90deg, transparent, var(--progress), transparent); }
+  .stat-card.succ::before { background: linear-gradient(90deg, transparent, var(--resolved), transparent); }
+
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-card.gold .stat-value { color: var(--gold); }
+  .stat-card.teal .stat-value { color: var(--accent); }
+  .stat-card.warn .stat-value { color: var(--medium); }
+  .stat-card.prog .stat-value { color: var(--progress); }
+  .stat-card.succ .stat-value { color: var(--resolved); }
+
+  /* ─── SECTION TITLES ─── */
+  .view-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .view-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ─── FILTERS ─── */
+  .filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+
+  select {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    color: var(--text);
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.78rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  select:focus { border-color: var(--accent); }
+  select option { background: #1a1a28; }
+
+  /* ─── TABLE ─── */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+  td {
+    padding: 0.9rem 1rem;
+    font-size: 0.82rem;
+    vertical-align: middle;
+  }
+
+  .td-query {
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  .td-user { color: var(--muted); font-size: 0.78rem; }
+
+  /* Pills */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .pill-status-Pending    { background: rgba(247,183,49,0.12);  color: var(--pending);  border: 1px solid rgba(247,183,49,0.25); }
+  .pill-status-InProgress { background: rgba(78,205,196,0.12);  color: var(--progress); border: 1px solid rgba(78,205,196,0.25); }
+  .pill-status-Resolved   { background: rgba(107,203,119,0.12); color: var(--resolved); border: 1px solid rgba(107,203,119,0.25); }
+  .pill-High   { background: rgba(239,71,111,0.1);   color: var(--high);    border: 1px solid rgba(239,71,111,0.25); }
+  .pill-Medium { background: rgba(247,183,49,0.1);   color: var(--medium);  border: 1px solid rgba(247,183,49,0.2); }
+  .pill-Low    { background: rgba(107,203,119,0.1);  color: var(--low);     border: 1px solid rgba(107,203,119,0.2); }
+  .pill-cat    { background: rgba(200,169,110,0.1);  color: var(--gold);    border: 1px solid rgba(200,169,110,0.2); }
+
+  /* Action buttons */
+  .action-group { display: flex; gap: 0.4rem; align-items: center; }
+
+  .btn-action {
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.68rem;
+    cursor: pointer;
+    border: 1px solid var(--border-soft);
+    background: none;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .btn-action:hover { color: var(--accent); border-color: var(--accent); }
+  .btn-action.danger:hover { color: var(--high); border-color: var(--high); }
+
+  /* Status select inline */
+  .status-select {
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.72rem;
+    padding: 0.25rem 0.4rem;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* ─── STUDENTS ─── */
+  .student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .student-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 1.3rem 1.5rem;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .student-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .student-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+
+  .student-email {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .student-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .student-count {
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,5,10,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 100%; max-width: 650px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.open .modal { transform: none; }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1.2rem;
+    background: none; border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 1.2rem;
+  }
+
+  .page-btn {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    width: 34px; height: 34px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); color: #05050a; border-color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Category bars */
+  .cat-bars { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+
+  .cat-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .cat-bar-label { width: 80px; color: var(--muted); font-size: 0.75rem; }
+
+  .cat-bar-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .cat-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+
+  .cat-bar-num {
+    width: 28px;
+    text-align: right;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 800px) {
+    .two-col { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+  }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .section-card-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: var(--accent);
+    color: #05050a;
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    z-index: 999;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: none; }
+  .toast.error { background: var(--high); color: #fff; }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(20px) } to { opacity:1; transform: none } }
+
+  /* ─── QUERY DETAIL MODAL ─── */
+  .qd-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 100%; max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.3s;
+  }
+  .modal-overlay.open .qd-modal { transform: none; }
+  .qd-id {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .qd-body {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">Pion<em>eer</em></div>
+    <div class="logo-badge">Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showView('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="showView('students')">
+      <span class="nav-icon">🎓</span> Students
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="doLogout()">← Logout</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-actions">
+      <button class="btn-sm btn-accent" onclick="refreshCurrent()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card teal"><div class="stat-label">Total Queries</div><div class="stat-value" id="s-total">—</div></div>
+        <div class="stat-card gold"><div class="stat-label">Students</div><div class="stat-value" id="s-students">—</div></div>
+        <div class="stat-card warn"><div class="stat-label">Pending</div><div class="stat-value" id="s-pending">—</div></div>
+        <div class="stat-card prog"><div class="stat-label">In Progress</div><div class="stat-value" id="s-progress">—</div></div>
+        <div class="stat-card succ"><div class="stat-label">Resolved</div><div class="stat-value" id="s-resolved">—</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="section-card">
+          <div class="section-card-title">By Category</div>
+          <div class="cat-bars" id="cat-bars"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-title">By Priority</div>
+          <div class="cat-bars" id="priority-bars"></div>
+        </div>
+      </div>
+
+      <!-- ALL QUERIES SECTION IN DASHBOARD -->
+      <div style="margin-top:2.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem">
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700">All Queries</div>
+            <div style="font-size:0.8rem;color:var(--muted)">Manage and update status of submitted tickets.</div>
+          </div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <select id="f-status" onchange="loadAdminQueries(1)">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <select id="f-category" onchange="loadAdminQueries(1)">
+              <option value="">All Categories</option>
+              <option>Finance</option><option>Academics</option><option>Technical</option>
+              <option>Hostel</option><option>Admin</option><option>Library</option><option>General</option>
+            </select>
+            <select id="f-priority" onchange="loadAdminQueries(1)">
+              <option value="">All Priority</option>
+              <option>High</option><option>Medium</option><option>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Student</th><th>Query</th><th>Category</th><th>Priority</th><th>Status</th><th>Date</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="queries-tbody">
+              <tr><td colspan="8" class="empty-state">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="q-pagination" class="pagination"></div>
+      </div>
+    </div>
+
+    <!-- QUERIES VIEW (hidden, kept for compat) -->
+    <div id="view-queries" class="view">
+    </div>
+
+    <!-- STUDENTS VIEW -->
+    <div id="view-students" class="view">
+      <div class="view-title">Students</div>
+      <div class="view-sub">All registered students and their query counts.</div>
+      <div class="student-grid" id="student-grid"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- STUDENT MODAL -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-student-name">Student</div>
+    <div class="modal-sub" id="modal-student-email"></div>
+    <div id="modal-queries-list"></div>
+  </div>
+</div>
+
+<!-- QUERY DETAIL MODAL -->
+<div class="modal-overlay" id="query-detail-modal" onclick="if(event.target===this)closeQueryDetail()">
+  <div class="qd-modal">
+    <button class="modal-close" onclick="closeQueryDetail()">✕</button>
+    <div class="qd-id" id="qd-id"></div>
+    <div class="modal-title" id="qd-title"></div>
+    <div class="modal-sub" id="qd-email"></div>
+    <div class="qd-body" id="qd-body"></div>
+    <div id="qd-pills" style="display:flex;gap:0.5rem;flex-wrap:wrap"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  let qPage = 1;
+
+  // ─── NAV ───
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    const navItems = document.querySelectorAll('.nav-item');
+    const navIndex = ['dashboard','students'].indexOf(name);
+    if (navIndex >= 0) navItems[navIndex].classList.add('active');
+    document.getElementById('topbar-title').textContent = {dashboard:'Dashboard',students:'Students'}[name] || name;
+
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'students') loadStudents();
+  }
+
+  function refreshCurrent() {
+    const active = document.querySelector('.view.active').id.replace('view-','');
+    showView(active);
+  }
+
+  // ─── TOAST ───
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ─── DASHBOARD ───
+  async function loadDashboard() {
+    const res = await fetch('/admin/dashboard', { credentials: 'include' });
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('s-total').textContent = d.total_queries;
+    document.getElementById('s-students').textContent = d.total_students;
+    document.getElementById('s-pending').textContent = d.pending;
+    document.getElementById('s-progress').textContent = d.in_progress;
+    document.getElementById('s-resolved').textContent = d.resolved;
+
+    // Category bars
+    const maxCat = Math.max(...Object.values(d.by_category), 1);
+    document.getElementById('cat-bars').innerHTML = Object.entries(d.by_category).map(([k,v]) => `
+      <div class="cat-bar-row">
+        <span class="cat-bar-label">${k}</span>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${v/maxCat*100}%"></div></div>
+        <span class="cat-bar-num">${v}</span>
+      </div>`).join('') || '<div style="color:var(--muted);font-size:0.8rem">No data yet</div>';
+
+    const colors = {High:'var(--high)',Medium:'var(--medium)',Low:'var(--low)'};
+    const maxPri = Math.max(...Object.values(d.by_priority), 1);
+    document.getElementById('priority-bars').innerHTML = Object.entries(d.by_priority).map(([k,v]) => `
+      <div class="cat-bar-row">
+        <span class="cat-bar-label">${k}</span>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${v/maxPri*100}%;background:${colors[k]||'var(--accent)'}"></div></div>
+        <span class="cat-bar-num">${v}</span>
+      </div>`).join('') || '<div style="color:var(--muted);font-size:0.8rem">No data yet</div>';
+
+    loadAdminQueries(1);
+  }
+
+  // ─── QUERIES ───
+  const queryDataMap = {};
+
+  async function loadAdminQueries(page) {
+    qPage = page;
+    const status = document.getElementById('f-status').value;
+    const cat = document.getElementById('f-category').value;
+    const pri = document.getElementById('f-priority').value;
+
+    let url = `/admin/queries?page=${page}&per_page=15`;
+    if (status) url += `&status=${encodeURIComponent(status)}`;
+    if (cat) url += `&category=${encodeURIComponent(cat)}`;
+    if (pri) url += `&priority=${encodeURIComponent(pri)}`;
+
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const tbody = document.getElementById('queries-tbody');
+    if (data.queries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">No queries found.</div></td></tr>`;
+    } else {
+      data.queries.forEach(q => { queryDataMap[q.id] = q; });
+      tbody.innerHTML = data.queries.map(q => {
+        const statusKey = q.status.replace(' ','');
+        const date = new Date(q.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        return `
+        <tr>
+          <td style="color:var(--muted);font-size:0.75rem">#${q.id}</td>
+          <td>
+            <div style="font-size:0.82rem">${escHtml(q.username)}</div>
+            <div class="td-user">${escHtml(q.email)}</div>
+          </td>
+          <td>
+            <div class="td-query" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px" onclick="openQueryDetail(${q.id})" title="Click to expand">${escHtml(q.query_text)}</div>
+          </td>
+          <td><span class="pill pill-cat">${q.category}</span></td>
+          <td><span class="pill pill-${q.priority}">${q.priority}</span></td>
+          <td>
+            <select class="status-select" onchange="updateStatus(${q.id}, this.value)">
+              <option ${q.status==='Pending'?'selected':''}>Pending</option>
+              <option value="In Progress" ${q.status==='In Progress'?'selected':''}>In Progress</option>
+              <option ${q.status==='Resolved'?'selected':''}>Resolved</option>
+            </select>
+          </td>
+          <td style="color:var(--muted);font-size:0.75rem">${date}</td>
+          <td>
+            <div class="action-group">
+              <button class="btn-action" onclick="openQueryDetail(${q.id})" title="View full query">⤢</button>
+              <button class="btn-action danger" onclick="deleteQuery(${q.id})">✕</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Pagination
+    const pages = Math.ceil(data.total / data.per_page) || 1;
+    const pg = document.getElementById('q-pagination');
+    if (pages <= 1) { pg.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="loadAdminQueries(${qPage-1})" ${qPage===1?'disabled':''}>‹</button>`;
+    for (let i=1; i<=pages; i++) html += `<button class="page-btn ${i===qPage?'active':''}" onclick="loadAdminQueries(${i})">${i}</button>`;
+    html += `<button class="page-btn" onclick="loadAdminQueries(${qPage+1})" ${qPage===pages?'disabled':''}>›</button>`;
+    pg.innerHTML = html;
+  }
+
+  function openQueryDetail(id) {
+    const q = queryDataMap[id];
+    if (!q) return;
+    const statusKey = q.status.replace(' ','');
+    const date = new Date(q.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    document.getElementById('qd-id').textContent = '#' + q.id;
+    document.getElementById('qd-title').textContent = q.username;
+    document.getElementById('qd-email').textContent = q.email + ' · ' + date;
+    document.getElementById('qd-body').textContent = q.query_text;
+    document.getElementById('qd-pills').innerHTML = `
+      <span class="pill pill-status-${statusKey}">${q.status}</span>
+      <span class="pill pill-cat">${q.category}</span>
+      <span class="pill pill-${q.priority}">${q.priority}</span>`;
+    document.getElementById('query-detail-modal').classList.add('open');
+  }
+
+  function closeQueryDetail() {
+    document.getElementById('query-detail-modal').classList.remove('open');
+  }
+
+  async function updateStatus(queryId, status) {
+    const res = await fetch('/admin/update-status', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({query_id: queryId, status})
+    });
+    if (res.ok) showToast('Status updated ✓');
+    else showToast('Update failed', 'error');
+  }
+
+  async function deleteQuery(queryId) {
+    if (!confirm('Delete this query? This cannot be undone.')) return;
+    const res = await fetch(`/admin/delete-query/${queryId}`, { method:'DELETE', credentials:'include' });
+    if (res.ok) {
+      showToast('Query deleted.');
+      loadAdminQueries(qPage);
+    } else {
+      showToast('Delete failed.', 'error');
+    }
+  }
+
+  // ─── STUDENTS ───
+  const studentDataMap = {};
+
+  async function loadStudents() {
+    const res = await fetch('/admin/students', { credentials: 'include' });
+    if (!res.ok) return;
+    const students = await res.json();
+    const grid = document.getElementById('student-grid');
+    if (students.length === 0) {
+      grid.innerHTML = `<div class="empty-state">No students registered yet.</div>`;
+      return;
+    }
+    students.forEach(s => { studentDataMap[s.id] = s; });
+    grid.innerHTML = students.map(s => `
+      <div class="student-card" onclick="openStudentModal(${s.id})">
+        <div class="student-name">${escHtml(s.username)}</div>
+        <div class="student-email">${escHtml(s.email)}</div>
+        <div class="student-meta">
+          <span class="student-count">${s.total_queries} queries</span>
+        </div>
+      </div>`).join('');
+  }
+
+  async function openStudentModal(id) {
+    const s = studentDataMap[id] || {};
+    document.getElementById('modal-student-name').textContent = s.username || '';
+    document.getElementById('modal-student-email').textContent = s.email || '';
+    document.getElementById('modal-queries-list').innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:1rem 0">Loading…</div>';
+    document.getElementById('student-modal').classList.add('open');
+
+    const res = await fetch(`/admin/student/${id}`, { credentials: 'include' });
+    if (!res.ok) {
+      document.getElementById('modal-queries-list').innerHTML = `<div class="empty-state">Failed to load queries.</div>`;
+      return;
+    }
+    const data = await res.json();
+
+    if (!data.queries || data.queries.length === 0) {
+      document.getElementById('modal-queries-list').innerHTML = `<div class="empty-state">No queries yet.</div>`;
+      return;
+    }
+
+    document.getElementById('modal-queries-list').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0.7rem">
+        ${data.queries.map(q => {
+          const statusKey = q.status.replace(' ','');
+          const date = new Date(q.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+          return `<div style="background:var(--card);border:1px solid var(--border-soft);border-radius:3px;padding:1rem 1.2rem;cursor:pointer;transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border-soft)'" onclick="openStudentQueryDetail(this, ${JSON.stringify(q).replace(/"/g,'&quot;')})">
+            <div style="font-size:0.85rem;margin-bottom:0.5rem;line-height:1.5">${escHtml(q.query_text)}</div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center">
+              <span class="pill pill-status-${statusKey}" style="font-size:0.65rem">${q.status}</span>
+              <span class="pill pill-cat" style="font-size:0.65rem">${q.category}</span>
+              <span class="pill pill-${q.priority}" style="font-size:0.65rem">${q.priority}</span>
+              <span style="margin-left:auto;font-size:0.7rem;color:var(--muted)">${date}</span>
+              <span style="font-size:0.7rem;color:var(--accent)">tap to expand ↗</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function openStudentQueryDetail(el, q) {
+    // Store and open the query detail modal from student context
+    queryDataMap[q.id] = q;
+    closeModal();
+    setTimeout(() => openQueryDetail(q.id), 200);
+  }
+
+  function closeModal() {
+    document.getElementById('student-modal').classList.remove('open');
+  }
+
+  document.getElementById('student-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('student-modal')) closeModal();
+  });
+
+  // ─── LOGOUT ───
+  async function doLogout() {
+    window.location.href = '/logout';
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ─── INIT ───
+  async function initAdmin() {
+    try {
+      const res = await fetch('/api/me', { credentials: 'include' });
+      if (!res.ok) { window.location.href = '/admin-login-page'; return; }
+      const user = await res.json();
+      if (user.role !== 'admin') { window.location.href = '/admin-login-page'; return; }
+      loadDashboard();
+    } catch(e) {
+      window.location.href = '/admin-login-page';
+    }
+  }
+
+  initAdmin();
+</script>
+</body>
+</html>

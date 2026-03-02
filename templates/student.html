@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pioneer — Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Epilogue:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #05050a;
+    --surface: #0f0f18;
+    --card: #141420;
+    --border: rgba(200,169,110,0.18);
+    --border-soft: rgba(255,255,255,0.06);
+    --accent: #c8a96e;
+    --accent2: #4ecdc4;
+    --text: #f0eee8;
+    --muted: #7a7888;
+    --pending: #f7b731;
+    --progress: #4ecdc4;
+    --resolved: #6bcb77;
+    --high: #ef476f;
+    --medium: #f7b731;
+    --low: #6bcb77;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Epilogue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* BG texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 40% 60% at 5% 30%, rgba(200,169,110,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 30% 40% at 95% 70%, rgba(78,205,196,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+  #auth-screen.active { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 2rem; }
+  #app-screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ─── AUTH ─── */
+  .auth-box {
+    width: 100%; max-width: 440px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .auth-box::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .auth-logo em { font-style: italic; color: var(--accent); }
+
+  .auth-subtitle {
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 2.5rem;
+  }
+
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 2rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none; border: none;
+    padding: 0.75rem;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 0; right: 0;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="text"], input[type="email"], input[type="password"], textarea, select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-soft);
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    outline: none;
+    margin-bottom: 1.2rem;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: rgba(200,169,110,0.05);
+  }
+
+  select option { background: #1a1a28; }
+
+  .btn {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--accent);
+    color: #05050a;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    display: none;
+  }
+
+  .alert.error { background: rgba(239,71,111,0.12); border: 1px solid rgba(239,71,111,0.3); color: #ef476f; display: block; }
+  .alert.success { background: rgba(107,203,119,0.12); border: 1px solid rgba(107,203,119,0.3); color: #6bcb77; display: block; }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent); }
+
+  /* ─── APP LAYOUT ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .topbar-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .topbar-logo em { font-style: italic; color: var(--accent); }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .topbar-username {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .topbar-username strong { color: var(--text); }
+
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    padding: 0.4rem 0.9rem;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .btn-logout:hover { color: var(--high); border-color: var(--high); }
+
+  .main-content {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  .section-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  /* ─── SUBMIT CARD ─── */
+  .submit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .submit-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  .char-count {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: right;
+    margin-top: -1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .submit-result {
+    margin-top: 1.2rem;
+    display: none;
+  }
+
+  .result-pills {
+    display: flex; gap: 0.6rem; flex-wrap: wrap;
+    margin-top: 0.6rem;
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* ─── QUERIES TABLE ─── */
+  .queries-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap; gap: 1rem;
+  }
+
+  .queries-count {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .btn-refresh {
+    background: none;
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    padding: 0.4rem 0.9rem;
+    border-radius: 3px;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-refresh:hover { color: var(--accent2); border-color: var(--accent2); }
+
+  .queries-list { display: flex; flex-direction: column; gap: 0.8rem; }
+
+  .query-item {
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    transition: border-color 0.2s;
+    cursor: default;
+  }
+
+  .query-item:hover { border-color: var(--border); }
+
+  .query-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .query-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .query-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .query-bottom {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .query-date {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* Pills */
+  .pill-status-Pending    { background: rgba(247,183,49,0.12);  color: var(--pending);  border: 1px solid rgba(247,183,49,0.25); }
+  .pill-status-InProgress { background: rgba(78,205,196,0.12);  color: var(--progress); border: 1px solid rgba(78,205,196,0.25); }
+  .pill-status-Resolved   { background: rgba(107,203,119,0.12); color: var(--resolved); border: 1px solid rgba(107,203,119,0.25); }
+  .pill-cat   { background: rgba(200,169,110,0.1);  color: var(--accent);  border: 1px solid rgba(200,169,110,0.2); }
+  .pill-High  { background: rgba(239,71,111,0.1);   color: var(--high);    border: 1px solid rgba(239,71,111,0.25); }
+  .pill-Medium{ background: rgba(247,183,49,0.1);   color: var(--medium);  border: 1px solid rgba(247,183,49,0.2); }
+  .pill-Low   { background: rgba(107,203,119,0.1);  color: var(--low);     border: 1px solid rgba(107,203,119,0.2); }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .page-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    width: 36px; height: 36px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); color: #05050a; border-color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fadeUp  { from { opacity: 0; transform: translateY(24px) } to { opacity: 1; transform: none } }
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH SCREEN ─── -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-box">
+    <div class="auth-logo">Pion<em>eer</em></div>
+    <div class="auth-subtitle">STUDENT PORTAL</div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login" class="tab-panel active">
+      <div id="login-alert" class="alert"></div>
+      <label>Username or Email</label>
+      <input type="text" id="login-username" placeholder="your_username"/>
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••"/>
+      <button class="btn" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="tab-register" class="tab-panel">
+      <div id="reg-alert" class="alert"></div>
+      <label>Username</label>
+      <input type="text" id="reg-username" placeholder="your_username"/>
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@university.edu"/>
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="min 6 characters"/>
+      <button class="btn" onclick="doRegister()">Create Account</button>
+    </div>
+
+    <a href="/" class="back-link">← Back to Role Select</a>
+  </div>
+</div>
+
+<!-- ─── APP SCREEN ─── -->
+<div id="app-screen" class="screen">
+  <header class="topbar">
+    <div class="topbar-logo">Pion<em>eer</em></div>
+    <div class="topbar-user">
+      <span class="topbar-username">Logged in as <strong id="user-display"></strong></span>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Submit -->
+    <div class="submit-card">
+      <div class="section-title">Submit a Query</div>
+      <div class="section-sub">Describe your issue and our system will categorize it automatically.</div>
+
+      <div id="submit-alert" class="alert"></div>
+
+      <label>Your Query</label>
+      <textarea id="query-input" placeholder="Describe your issue in detail (minimum 10 characters)..." oninput="updateCharCount()"></textarea>
+      <div class="char-count"><span id="char-num">0</span> / 2000</div>
+
+      <button class="btn" id="submit-btn" onclick="doSubmit()">Submit Query</button>
+
+      <div id="submit-result" class="submit-result">
+        <div class="alert success" id="submit-success-msg"></div>
+        <div class="result-pills" id="result-pills"></div>
+      </div>
+    </div>
+
+    <!-- Queries -->
+    <div>
+      <div class="queries-header">
+        <div>
+          <div class="section-title">My Queries</div>
+          <div class="queries-count" id="queries-count"></div>
+        </div>
+        <button class="btn-refresh" onclick="loadQueries(1)">↻ Refresh</button>
+      </div>
+
+      <div id="queries-list" class="queries-list"></div>
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let currentPage = 1;
+  let totalPages = 1;
+
+  // ─── TABS ───
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+    document.getElementById('tab-login').classList.toggle('active', tab==='login');
+    document.getElementById('tab-register').classList.toggle('active', tab==='register');
+    clearAlerts();
+  }
+
+  function clearAlerts() {
+    document.querySelectorAll('.alert').forEach(el => { el.className = 'alert'; el.textContent = ''; });
+  }
+
+  function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'alert ' + type;
+  }
+
+  // ─── AUTH ───
+  async function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    if (!username || !password) return showAlert('login-alert','Please fill all fields.','error');
+
+    const res = await fetch('/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      enterApp(username);
+    } else {
+      showAlert('login-alert', data.message || 'Login failed.', 'error');
+    }
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    if (!username || !email || !password) return showAlert('reg-alert','Please fill all fields.','error');
+
+    const res = await fetch('/register', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, email, password})
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      showAlert('reg-alert', 'Account created! Please sign in.', 'success');
+      setTimeout(() => switchTab('login'), 1500);
+    } else {
+      showAlert('reg-alert', data.message || 'Registration failed.', 'error');
+    }
+  }
+
+  function enterApp(username) {
+    document.getElementById('user-display').textContent = username;
+    document.getElementById('auth-screen').classList.remove('active');
+    document.getElementById('app-screen').classList.add('active');
+    loadQueries(1);
+  }
+
+  async function doLogout() {
+    await fetch('/api/logout', {method:'POST', credentials:'include'});
+    document.getElementById('app-screen').classList.remove('active');
+    document.getElementById('auth-screen').classList.add('active');
+    document.getElementById('login-password').value = '';
+    clearAlerts();
+  }
+
+  // ─── SESSION RESTORE ───
+  async function checkSession() {
+    try {
+      const res = await fetch('/api/me', { credentials: 'include' });
+      if (res.ok) {
+        const user = await res.json();
+        if (user.role === 'student') enterApp(user.username);
+      }
+    } catch(e) {}
+  }
+
+  // ─── SUBMIT ───
+  function updateCharCount() {
+    const len = document.getElementById('query-input').value.length;
+    document.getElementById('char-num').textContent = len;
+  }
+
+  async function doSubmit() {
+    const query = document.getElementById('query-input').value.trim();
+    document.getElementById('submit-result').style.display = 'none';
+    document.getElementById('submit-alert').className = 'alert';
+
+    if (query.length < 10) return showAlert('submit-alert','Query must be at least 10 characters.','error');
+    if (query.length > 2000) return showAlert('submit-alert','Query is too long.','error');
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Submitting...';
+
+    const res = await fetch('/submit', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({query})
+    });
+    const data = await res.json();
+
+    btn.disabled = false; btn.textContent = 'Submit Query';
+
+    if (res.ok) {
+      document.getElementById('query-input').value = '';
+      document.getElementById('char-num').textContent = '0';
+
+      const successEl = document.getElementById('submit-success-msg');
+      successEl.textContent = data.message;
+      successEl.className = 'alert success';
+
+      const pillsEl = document.getElementById('result-pills');
+      pillsEl.innerHTML = `
+        <span class="pill pill-cat">📂 ${data.category}</span>
+        <span class="pill pill-${data.priority}">⚡ ${data.priority} Priority</span>
+      `;
+      document.getElementById('submit-result').style.display = 'block';
+      loadQueries(1);
+    } else {
+      showAlert('submit-alert', data.message || 'Submission failed.', 'error');
+    }
+  }
+
+  // ─── QUERIES ───
+  async function loadQueries(page) {
+    currentPage = page;
+    const res = await fetch(`/student/queries?page=${page}&per_page=5`, { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+
+    totalPages = Math.ceil(data.total / data.per_page) || 1;
+    document.getElementById('queries-count').textContent = `${data.total} total ticket${data.total !== 1 ? 's' : ''}`;
+
+    const list = document.getElementById('queries-list');
+
+    if (data.queries.length === 0) {
+      list.innerHTML = `<div class="empty-state"><span class="empty-icon">📭</span>No queries submitted yet.</div>`;
+    } else {
+      list.innerHTML = data.queries.map(q => {
+        const statusKey = q.status.replace(' ','');
+        const date = new Date(q.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+        return `
+          <div class="query-item">
+            <div class="query-top">
+              <div class="query-text">${escHtml(q.query_text)}</div>
+              <div class="query-meta">
+                <span class="pill pill-status-${statusKey}">${q.status}</span>
+              </div>
+            </div>
+            <div class="query-bottom">
+              <span class="pill pill-cat" style="font-size:0.68rem">${q.category}</span>
+              <span class="pill pill-${q.priority}" style="font-size:0.68rem">${q.priority}</span>
+              <span class="query-date">${date}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderPagination(data.total, data.per_page);
+  }
+
+  function renderPagination(total, perPage) {
+    const pages = Math.ceil(total / perPage) || 1;
+    const pg = document.getElementById('pagination');
+    if (pages <= 1) { pg.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="loadQueries(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i=1; i<=pages; i++) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="loadQueries(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="loadQueries(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+    pg.innerHTML = html;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ─── INIT ───
+  checkSession();
+</script>
+</body>
+</html>
