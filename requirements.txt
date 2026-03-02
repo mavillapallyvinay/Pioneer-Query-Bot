@@ -1,5 +1,5 @@
 flask
+gunicorn
+python-dotenv
 google-generativeai
 werkzeug
-gunicorn
-
