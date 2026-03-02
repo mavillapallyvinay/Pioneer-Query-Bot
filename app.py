@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, session, redirect, render_template
 import sqlite3
-from google import genai
+import google.generativeai as genai
 import json
 import re
 import logging
@@ -24,15 +24,12 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = False   # Set True if using HTTPS
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # Session lasts 24 hours
 
-# ✅ API key loaded ONLY from .env — never hardcoded
 gemini_api_key = os.environ.get("GEMINI_API_KEY")
 
-if not gemini_api_key:
-    logger_temp = logging.getLogger(__name__)
-    print("WARNING: GEMINI_API_KEY not set in .env. Using rule-based classification only.")
-    client = None
+if gemini_api_key:
+    genai.configure(api_key=gemini_api_key)
 else:
-    client = genai.Client(api_key=gemini_api_key)
+    print("WARNING: GEMINI_API_KEY not set. Using rule-based classification only.")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -188,7 +185,7 @@ def classify_query_rule_based(text):
 
 
 def classify_query(text):
-    if client is None:
+    if not gemini_api_key:
         return classify_query_rule_based(text)
 
     safe_text = sanitize_for_prompt(text)
@@ -212,15 +209,15 @@ Rules:
 
 Query: {safe_text}"""
 
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-        cleaned  = response.text.replace("```json", "").replace("```", "").strip()
+        response = genai.GenerativeModel("gemini-2.0-flash").generate_content(prompt)
+        cleaned  = response.text.strip()
         data     = json.loads(cleaned)
 
         if not isinstance(data, dict):
             raise ValueError("Invalid AI response structure")
 
         valid_categories = ["Finance", "Academics", "Technical", "Hostel", "Admin", "Library", "General"]
-        valid_priorities  = ["Low", "Medium", "High"]
+        valid_priorities = ["Low", "Medium", "High"]
 
         category = data.get("category", "General")
         priority = data.get("priority", "Medium")
@@ -251,7 +248,7 @@ def student_page():
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok", "ai_enabled": client is not None})
+    return jsonify({"status": "ok", "ai_enabled": bool(gemini_api_key)})
 
 
 # ─────────────────────────────────────────────
@@ -629,7 +626,7 @@ def delete_query(query_id):
     return jsonify({"message": "Query deleted successfully."})
 
 
-# ─────────────────────────────────────────────  ← ONLY CHANGE IS HERE
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)
